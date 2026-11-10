@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+.runtime/
+licenses/
+*.lic
+*.log
+*.jsonl
+*.sqlite*
+.venv/
+__pycache__/
+.DS_Store
+.pytest_cache/

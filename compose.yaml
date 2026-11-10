@@ -1,0 +1,40 @@
+name: denodo-agent-management-otel
+services:
+  denodo:
+    # Denodo Platform 9.5.3: use a digest to keep the tested image reproducible.
+    image: harbor.open.denodo.com/denodo-express/denodo-platform@sha256:1a27f055268f9029d57c1e3af8edb9022d4612dcd2ef3e89c71a03057b472c59
+    platform: ${DENODO_PLATFORM:-linux/amd64}
+    hostname: denodo
+    command: ["--vdpserver", "--designstudio", "--datacatalog"]
+    environment:
+      DENODO_USERNAME: ${DENODO_ADMIN_USER:-admin}
+      DENODO_PASSWORD: ${DENODO_ADMIN_PASSWORD:?Set DENODO_ADMIN_PASSWORD in .env}
+      DENODO_INIT_MAX_TIMEOUT: "600"
+      DENODO_WEBCONTAINER_STARTUP: "true"
+    ports:
+      - "127.0.0.1:9090:9090"
+      - "127.0.0.1:9994:9994"
+      - "127.0.0.1:9999:9999"
+    volumes:
+      - type: bind
+        source: ${DENODO_LICENSE_FILE:?Set DENODO_LICENSE_FILE in .env}
+        target: /opt/denodo/conf/denodo.lic
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./.runtime/sdk/sample_chatbot/sample_data
+        target: /opt/denodo/samples/ai-sdk/sample_chatbot/sample_data
+        read_only: true
+        bind:
+          create_host_path: false
+      - metadata:/opt/denodo/metadata
+    healthcheck:
+      test: ["CMD", "/opt/denodo/bin/ping.sh", "-r", "-t", "5000", "//localhost:9999/admin"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 600s
+    stop_grace_period: 90s
+volumes:
+  metadata:
